@@ -90,8 +90,8 @@ def get_retry_request(
     retry_times = request.meta.get('retry_times', 0) + 1
     if max_retry_times is None:
         max_retry_times = request.meta.get('max_retry_times')
-        if max_retry_times is None:
-            max_retry_times = settings.getint('RETRY_TIMES')
+    if max_retry_times is None:
+        max_retry_times = settings.getint('RETRY_TIMES')
     if retry_times <= max_retry_times:
         logger.debug(
             "Retrying %(request)s (failed %(retry_times)d times): %(reason)s",
@@ -137,7 +137,7 @@ class RetryMiddleware:
         if not settings.getbool('RETRY_ENABLED'):
             raise NotConfigured
         self.max_retry_times = settings.getint('RETRY_TIMES')
-        self.retry_http_codes = set(int(x) for x in settings.getlist('RETRY_HTTP_CODES'))
+        self.retry_http_codes = {int(x) for x in settings.getlist('RETRY_HTTP_CODES')}
         self.priority_adjust = settings.getint('RETRY_PRIORITY_ADJUST')
 
     @classmethod

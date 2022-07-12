@@ -104,9 +104,7 @@ def request_httprepr(request: Request) -> bytes:
 def referer_str(request: Request) -> Optional[str]:
     """ Return Referer HTTP header suitable for logging. """
     referrer = request.headers.get('Referer')
-    if referrer is None:
-        return referrer
-    return to_unicode(referrer, errors='replace')
+    return referrer if referrer is None else to_unicode(referrer, errors='replace')
 
 
 def request_from_dict(d: dict, *, spider: Optional[Spider] = None) -> Request:

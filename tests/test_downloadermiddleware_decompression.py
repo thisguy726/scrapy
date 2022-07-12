@@ -10,7 +10,7 @@ def _test_data(formats):
     uncompressed_body = get_testdata('compressed', 'feed-sample1.xml')
     test_responses = {}
     for format in formats:
-        body = get_testdata('compressed', 'feed-sample1.' + format)
+        body = get_testdata('compressed', f'feed-sample1.{format}')
         test_responses[format] = Response('http://foo.com/bar', body=body)
     return uncompressed_body, test_responses
 

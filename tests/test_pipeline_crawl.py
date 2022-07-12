@@ -21,22 +21,22 @@ class MediaDownloadSpider(SimpleSpider):
     def parse(self, response):
         self.logger.info(response.headers)
         self.logger.info(response.text)
-        item = {
+        yield {
             self.media_key: [],
             self.media_urls_key: [
                 self._process_url(response.urljoin(href))
                 for href in response.xpath(
                     '//table[thead/tr/th="Filename"]/tbody//a/@href'
-                ).getall()],
+                ).getall()
+            ],
         }
-        yield item
 
 
 class BrokenLinksMediaDownloadSpider(MediaDownloadSpider):
     name = 'brokenmedia'
 
     def _process_url(self, url):
-        return url + '.foo'
+        return f'{url}.foo'
 
 
 class RedirectedMediaDownloadSpider(MediaDownloadSpider):
@@ -98,11 +98,7 @@ class FileDownloadCrawlTestCase(TestCase):
 
         # check that the images/files checksums are what we know they should be
         if self.expected_checksums is not None:
-            checksums = set(
-                i['checksum']
-                for item in items
-                for i in item[self.media_key]
-            )
+            checksums = {i['checksum'] for item in items for i in item[self.media_key]}
             self.assertEqual(checksums, self.expected_checksums)
 
         # check that the image files where actually written to the media store
@@ -166,7 +162,7 @@ class FileDownloadCrawlTestCase(TestCase):
     @defer.inlineCallbacks
     def test_download_media_redirected_allowed(self):
         settings = dict(self.settings)
-        settings.update({'MEDIA_ALLOW_REDIRECTS': True})
+        settings['MEDIA_ALLOW_REDIRECTS'] = True
         self.runner = CrawlerRunner(settings)
 
         crawler = self._create_crawler(RedirectedMediaDownloadSpider)

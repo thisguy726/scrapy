@@ -82,9 +82,7 @@ class RequestTest(unittest.TestCase):
         r2 = self.request_class(url=url)
         self.assertNotEqual(r1, r2)
 
-        set_ = set()
-        set_.add(r1)
-        set_.add(r2)
+        set_ = {r1, r2}
         self.assertEqual(len(set_), 2)
 
     def test_url(self):
@@ -1238,10 +1236,7 @@ def _buildresponse(body, **kwargs):
 
 
 def _qs(req, encoding='utf-8', to_unicode=False):
-    if req.method == 'POST':
-        qs = req.body
-    else:
-        qs = req.url.partition('?')[2]
+    qs = req.body if req.method == 'POST' else req.url.partition('?')[2]
     uqs = unquote_to_bytes(qs)
     if to_unicode:
         uqs = uqs.decode(encoding)

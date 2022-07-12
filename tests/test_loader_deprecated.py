@@ -42,9 +42,7 @@ class DefaultedItemLoader(NameItemLoader):
 
 # test processors
 def processor_with_args(value, other=None, loader_context=None):
-    if 'key' in loader_context:
-        return loader_context['key']
-    return value
+    return loader_context['key'] if 'key' in loader_context else value
 
 
 class BasicItemLoaderTest(unittest.TestCase):

@@ -76,23 +76,21 @@ class ItemFilter:
         :return: `True` if accepted, `False` otherwise
         :rtype: bool
         """
-        if self.item_classes:
-            return isinstance(item, self.item_classes)
-        return True  # accept all items by default
+        return isinstance(item, self.item_classes) if self.item_classes else True
 
 
 class IFeedStorage(Interface):
     """Interface that all Feed Storages must implement"""
 
-    def __init__(uri, *, feed_options=None):
+    def __init__(self, *, feed_options=None):
         """Initialize the storage with the parameters given in the URI and the
         feed-specific options (see :setting:`FEEDS`)"""
 
-    def open(spider):
+    def open(self):
         """Open the storage for the given spider. It must return a file-like
         object that will be used for the exporters"""
 
-    def store(file):
+    def store(self):
         """Store the given file stream"""
 
 
@@ -102,7 +100,7 @@ class BlockingFeedStorage:
     def open(self, spider):
         path = spider.crawler.settings['FEED_TEMPDIR']
         if path and not os.path.isdir(path):
-            raise OSError('Not a Directory: ' + str(path))
+            raise OSError(f'Not a Directory: {str(path)}')
 
         return NamedTemporaryFile(prefix='feed-', dir=path)
 
@@ -530,9 +528,7 @@ class FeedExporter:
         uri_params_function: Optional[Union[str, Callable[[dict, Spider], dict]]],
         slot: Optional[_FeedSlot] = None,
     ) -> dict:
-        params = {}
-        for k in dir(spider):
-            params[k] = getattr(spider, k)
+        params = {k: getattr(spider, k) for k in dir(spider)}
         utc_now = datetime.utcnow()
         params['time'] = utc_now.replace(microsecond=0).isoformat().replace(':', '-')
         params['batch_time'] = utc_now.isoformat().replace(':', '-')

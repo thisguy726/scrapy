@@ -371,10 +371,7 @@ class FilesPipeline(MediaPipeline):
         return cls(store_uri, settings=settings)
 
     def _get_store(self, uri):
-        if os.path.isabs(uri):  # to support win32 paths like: C:\\some\dir
-            scheme = 'file'
-        else:
-            scheme = urlparse(uri).scheme
+        scheme = 'file' if os.path.isabs(uri) else urlparse(uri).scheme
         store_cls = self.STORE_SCHEMES[scheme]
         return store_cls(uri)
 
@@ -409,11 +406,13 @@ class FilesPipeline(MediaPipeline):
         dfd = defer.maybeDeferred(self.store.stat_file, path, info)
         dfd.addCallbacks(_onsuccess, lambda _: None)
         dfd.addErrback(
-            lambda f:
-            logger.error(self.__class__.__name__ + '.store.stat_file',
-                         exc_info=failure_to_exc_info(f),
-                         extra={'spider': info.spider})
+            lambda f: logger.error(
+                f'{self.__class__.__name__}.store.stat_file',
+                exc_info=failure_to_exc_info(f),
+                extra={'spider': info.spider},
+            )
         )
+
         return dfd
 
     def media_failed(self, failure, request, info):
@@ -511,7 +510,6 @@ class FilesPipeline(MediaPipeline):
         # mime type then extension or default to empty string otherwise
         if media_ext not in mimetypes.types_map:
             media_ext = ''
-            media_type = mimetypes.guess_type(request.url)[0]
-            if media_type:
+            if media_type := mimetypes.guess_type(request.url)[0]:
                 media_ext = mimetypes.guess_extension(media_type)
         return f'full/{media_guid}{media_ext}'

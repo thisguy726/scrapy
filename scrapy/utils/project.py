@@ -32,11 +32,10 @@ def project_data_dir(project='default'):
     cfg = get_config()
     if cfg.has_option(DATADIR_CFG_SECTION, project):
         d = cfg.get(DATADIR_CFG_SECTION, project)
-    else:
-        scrapy_cfg = closest_scrapy_cfg()
-        if not scrapy_cfg:
-            raise NotConfigured("Unable to find scrapy.cfg file to infer project data dir")
+    elif scrapy_cfg := closest_scrapy_cfg():
         d = abspath(join(dirname(scrapy_cfg), '.scrapy'))
+    else:
+        raise NotConfigured("Unable to find scrapy.cfg file to infer project data dir")
     if not exists(d):
         os.makedirs(d)
     return d
@@ -63,8 +62,7 @@ def get_project_settings():
         init_env(project)
 
     settings = Settings()
-    settings_module_path = os.environ.get(ENVVAR)
-    if settings_module_path:
+    if settings_module_path := os.environ.get(ENVVAR):
         settings.setmodule(settings_module_path, priority='project')
 
     scrapy_envvars = {k[7:]: v for k, v in os.environ.items() if
@@ -75,8 +73,9 @@ def get_project_settings():
         'PYTHON_SHELL',
         'SETTINGS_MODULE',
     }
-    setting_envvars = {k for k in scrapy_envvars if k not in valid_envvars}
-    if setting_envvars:
+    if setting_envvars := {
+        k for k in scrapy_envvars if k not in valid_envvars
+    }:
         setting_envvar_list = ', '.join(sorted(setting_envvars))
         warnings.warn(
             'Use of environment variables prefixed with SCRAPY_ to override '

@@ -55,8 +55,14 @@ class CmdlineTest(unittest.TestCase):
     def test_override_dict_settings(self):
         EXT_PATH = "tests.test_cmdline.extensions.DummyExtension"
         EXTENSIONS = {EXT_PATH: 200}
-        settingsstr = self._execute('settings', '--get', 'EXTENSIONS', '-s',
-                                    'EXTENSIONS=' + json.dumps(EXTENSIONS))
+        settingsstr = self._execute(
+            'settings',
+            '--get',
+            'EXTENSIONS',
+            '-s',
+            f'EXTENSIONS={json.dumps(EXTENSIONS)}',
+        )
+
         # XXX: There's gotta be a smarter way to do this...
         self.assertNotIn("...", settingsstr)
         for char in ("'", "<", ">"):

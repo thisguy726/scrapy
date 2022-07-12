@@ -30,95 +30,151 @@ class Base:
             lx = self.extractor_cls()
             page4_url = 'http://example.com/page%204.html'
 
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-                Link(url='http://example.com/sample3.html', text='sample 3 text'),
-                Link(url='http://example.com/sample3.html#foo', text='sample 3 repetition with fragment'),
-                Link(url='http://www.google.com/something', text=''),
-                Link(url='http://example.com/innertag.html', text='inner tag'),
-                Link(url=page4_url, text='href with whitespaces'),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                    Link(url='http://example.com/sample3.html', text='sample 3 text'),
+                    Link(
+                        url='http://example.com/sample3.html#foo',
+                        text='sample 3 repetition with fragment',
+                    ),
+                    Link(url='http://www.google.com/something', text=''),
+                    Link(url='http://example.com/innertag.html', text='inner tag'),
+                    Link(url=page4_url, text='href with whitespaces'),
+                ],
+            )
 
         def test_extract_filter_allow(self):
             lx = self.extractor_cls(allow=('sample', ))
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-                Link(url='http://example.com/sample3.html', text='sample 3 text'),
-                Link(url='http://example.com/sample3.html#foo', text='sample 3 repetition with fragment')
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                    Link(url='http://example.com/sample3.html', text='sample 3 text'),
+                    Link(
+                        url='http://example.com/sample3.html#foo',
+                        text='sample 3 repetition with fragment',
+                    ),
+                ],
+            )
 
         def test_extract_filter_allow_with_duplicates(self):
             lx = self.extractor_cls(allow=('sample', ), unique=False)
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-                Link(url='http://example.com/sample3.html', text='sample 3 text'),
-                Link(url='http://example.com/sample3.html', text='sample 3 repetition'),
-                Link(url='http://example.com/sample3.html#foo', text='sample 3 repetition with fragment')
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                    Link(url='http://example.com/sample3.html', text='sample 3 text'),
+                    Link(
+                        url='http://example.com/sample3.html',
+                        text='sample 3 repetition',
+                    ),
+                    Link(
+                        url='http://example.com/sample3.html#foo',
+                        text='sample 3 repetition with fragment',
+                    ),
+                ],
+            )
 
         def test_extract_filter_allow_with_duplicates_canonicalize(self):
             lx = self.extractor_cls(allow=('sample', ), unique=False,
                                     canonicalize=True)
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-                Link(url='http://example.com/sample3.html', text='sample 3 text'),
-                Link(url='http://example.com/sample3.html', text='sample 3 repetition'),
-                Link(url='http://example.com/sample3.html', text='sample 3 repetition with fragment')
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                    Link(url='http://example.com/sample3.html', text='sample 3 text'),
+                    Link(
+                        url='http://example.com/sample3.html',
+                        text='sample 3 repetition',
+                    ),
+                    Link(
+                        url='http://example.com/sample3.html',
+                        text='sample 3 repetition with fragment',
+                    ),
+                ],
+            )
 
         def test_extract_filter_allow_no_duplicates_canonicalize(self):
             lx = self.extractor_cls(allow=('sample',), unique=True,
                                     canonicalize=True)
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-                Link(url='http://example.com/sample3.html', text='sample 3 text'),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                    Link(url='http://example.com/sample3.html', text='sample 3 text'),
+                ],
+            )
 
         def test_extract_filter_allow_and_deny(self):
             lx = self.extractor_cls(allow=('sample', ), deny=('3', ))
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                ],
+            )
 
         def test_extract_filter_allowed_domains(self):
             lx = self.extractor_cls(allow_domains=('google.com', ))
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://www.google.com/something', text=''),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://www.google.com/something', text=''),
+                ],
+            )
 
         def test_extraction_using_single_values(self):
             '''Test the extractor's behaviour among different situations'''
 
             lx = self.extractor_cls(allow='sample')
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-                Link(url='http://example.com/sample3.html', text='sample 3 text'),
-                Link(url='http://example.com/sample3.html#foo',
-                     text='sample 3 repetition with fragment')
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                    Link(url='http://example.com/sample3.html', text='sample 3 text'),
+                    Link(
+                        url='http://example.com/sample3.html#foo',
+                        text='sample 3 repetition with fragment',
+                    ),
+                ],
+            )
+
 
             lx = self.extractor_cls(allow='sample', deny='3')
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                ],
+            )
+
 
             lx = self.extractor_cls(allow_domains='google.com')
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://www.google.com/something', text=''),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://www.google.com/something', text=''),
+                ],
+            )
+
 
             lx = self.extractor_cls(deny_domains='example.com')
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://www.google.com/something', text=''),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://www.google.com/something', text=''),
+                ],
+            )
 
         def test_nofollow(self):
             '''Test the extractor's behaviour for links with rel="nofollow"'''
@@ -182,10 +238,13 @@ class Base:
 
         def test_restrict_xpaths(self):
             lx = self.extractor_cls(restrict_xpaths=('//div[@id="subwrapper"]', ))
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                ],
+            )
 
         def test_restrict_xpaths_encoding(self):
             """Test restrict_xpaths with encodings"""
@@ -229,11 +288,14 @@ class Base:
         def test_restrict_css_and_restrict_xpaths_together(self):
             lx = self.extractor_cls(restrict_xpaths=('//div[@id="subwrapper"]', ),
                                     restrict_css=('#subwrapper + a', ))
-            self.assertEqual([link for link in lx.extract_links(self.response)], [
-                Link(url='http://example.com/sample1.html', text=''),
-                Link(url='http://example.com/sample2.html', text='sample 2'),
-                Link(url='http://example.com/sample3.html', text='sample 3 text'),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(self.response)),
+                [
+                    Link(url='http://example.com/sample1.html', text=''),
+                    Link(url='http://example.com/sample2.html', text='sample 2'),
+                    Link(url='http://example.com/sample3.html', text='sample 3 text'),
+                ],
+            )
 
         def test_area_tag_with_unicode_present(self):
             body = b"""<html><body>\xbe\xa9<map><area href="http://example.org/foo" /></map></body></html>"""
@@ -288,7 +350,7 @@ class Base:
             def process_value(value):
                 m = re.search(r"javascript:goToPage\('(.*?)'", value)
                 if m:
-                    return m.group(1)
+                    return m[1]
 
             lx = self.extractor_cls(process_value=process_value)
             self.assertEqual(lx.extract_links(response),
@@ -454,10 +516,21 @@ class Base:
             """
             response = HtmlResponse("http://example.org/index.html", body=html)
             lx = self.extractor_cls()
-            self.assertEqual([link for link in lx.extract_links(response)], [
-                Link(url='http://example.org/item1.html', text='Item 1', nofollow=False),
-                Link(url='http://example.org/item3.html', text='Item 3', nofollow=False),
-            ])
+            self.assertEqual(
+                list(lx.extract_links(response)),
+                [
+                    Link(
+                        url='http://example.org/item1.html',
+                        text='Item 1',
+                        nofollow=False,
+                    ),
+                    Link(
+                        url='http://example.org/item3.html',
+                        text='Item 3',
+                        nofollow=False,
+                    ),
+                ],
+            )
 
         def test_ftp_links(self):
             body = b"""
@@ -486,10 +559,21 @@ class LxmlLinkExtractorTestCase(Base.LinkExtractorTestCase):
         """
         response = HtmlResponse("http://example.org/index.html", body=html)
         lx = self.extractor_cls()
-        self.assertEqual([link for link in lx.extract_links(response)], [
-            Link(url='http://example.org/item1.html', text='Item 1', nofollow=False),
-            Link(url='http://example.org/item3.html', text='Item 3', nofollow=False),
-        ])
+        self.assertEqual(
+            list(lx.extract_links(response)),
+            [
+                Link(
+                    url='http://example.org/item1.html',
+                    text='Item 1',
+                    nofollow=False,
+                ),
+                Link(
+                    url='http://example.org/item3.html',
+                    text='Item 3',
+                    nofollow=False,
+                ),
+            ],
+        )
 
     def test_link_restrict_text(self):
         html = b"""
@@ -500,20 +584,47 @@ class LxmlLinkExtractorTestCase(Base.LinkExtractorTestCase):
         response = HtmlResponse("http://example.org/index.html", body=html)
         # Simple text inclusion test
         lx = self.extractor_cls(restrict_text='dog')
-        self.assertEqual([link for link in lx.extract_links(response)], [
-            Link(url='http://example.org/item2.html', text='Pic of a dog', nofollow=False),
-        ])
+        self.assertEqual(
+            list(lx.extract_links(response)),
+            [
+                Link(
+                    url='http://example.org/item2.html',
+                    text='Pic of a dog',
+                    nofollow=False,
+                ),
+            ],
+        )
+
         # Unique regex test
         lx = self.extractor_cls(restrict_text=r'of.*dog')
-        self.assertEqual([link for link in lx.extract_links(response)], [
-            Link(url='http://example.org/item2.html', text='Pic of a dog', nofollow=False),
-        ])
+        self.assertEqual(
+            list(lx.extract_links(response)),
+            [
+                Link(
+                    url='http://example.org/item2.html',
+                    text='Pic of a dog',
+                    nofollow=False,
+                ),
+            ],
+        )
+
         # Multiple regex test
         lx = self.extractor_cls(restrict_text=[r'of.*dog', r'of.*cat'])
-        self.assertEqual([link for link in lx.extract_links(response)], [
-            Link(url='http://example.org/item1.html', text='Pic of a cat', nofollow=False),
-            Link(url='http://example.org/item2.html', text='Pic of a dog', nofollow=False),
-        ])
+        self.assertEqual(
+            list(lx.extract_links(response)),
+            [
+                Link(
+                    url='http://example.org/item1.html',
+                    text='Pic of a cat',
+                    nofollow=False,
+                ),
+                Link(
+                    url='http://example.org/item2.html',
+                    text='Pic of a dog',
+                    nofollow=False,
+                ),
+            ],
+        )
 
     def test_restrict_xpaths_with_html_entities(self):
         super().test_restrict_xpaths_with_html_entities()

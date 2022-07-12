@@ -37,7 +37,7 @@ class TopLevelFormatter(logging.Filter):
         self.loggers = loggers or []
 
     def filter(self, record):
-        if any(record.name.startswith(logger + '.') for logger in self.loggers):
+        if any(record.name.startswith(f'{logger}.') for logger in self.loggers):
             record.name = record.name.split('.', 1)[0]
         return True
 
@@ -122,8 +122,7 @@ _scrapy_root_handler = None
 
 def _get_handler(settings):
     """ Return a log handler object according to settings """
-    filename = settings.get('LOG_FILE')
-    if filename:
+    if filename := settings.get('LOG_FILE'):
         mode = 'a' if settings.getbool('LOG_FILE_APPEND') else 'w'
         encoding = settings.get('LOG_ENCODING')
         handler = logging.FileHandler(filename, mode=mode, encoding=encoding)
@@ -217,6 +216,6 @@ def logformatter_adapter(logkws):
     message = logkws.get('format', logkws.get('msg'))
     # NOTE: This also handles 'args' being an empty dict, that case doesn't
     # play well in logger.log calls
-    args = logkws if not logkws.get('args') else logkws['args']
+    args = logkws['args'] if logkws.get('args') else logkws
 
     return (level, message, args)

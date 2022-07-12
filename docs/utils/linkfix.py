@@ -35,16 +35,14 @@ def main():
 
     # For every line, fix the respective file
     for line in output_lines:
-        match = re.match(line_re, line)
-
-        if match:
-            newfilename = match.group(1)
-            errortype = match.group(2)
+        if match := re.match(line_re, line):
+            newfilename = match[1]
+            errortype = match[2]
 
             # Broken links can't be fixed and
             # I am not sure what do with the local ones.
             if errortype.lower() in ["broken", "local"]:
-                print("Not Fixed: " + line)
+                print(f"Not Fixed: {line}")
             else:
                 # If this is a new file
                 if newfilename != _filename:
@@ -60,10 +58,10 @@ def main():
                     with open(_filename) as _file:
                         _contents = _file.read()
 
-                _contents = _contents.replace(match.group(3), match.group(4))
+                _contents = _contents.replace(match[3], match[4])
         else:
             # We don't understand what the current line means!
-            print("Not Understood: " + line)
+            print(f"Not Understood: {line}")
 
 
 if __name__ == '__main__':

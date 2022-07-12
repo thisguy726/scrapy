@@ -50,6 +50,8 @@ def create_deprecated_class(
     OldName.
     """
 
+
+
     class DeprecatedClass(new_class.__class__):
 
         deprecated_class = None
@@ -77,9 +79,8 @@ def create_deprecated_class(
         # see https://www.python.org/dev/peps/pep-3119/#overloading-isinstance-and-issubclass
         # and https://docs.python.org/reference/datamodel.html#customizing-instance-and-subclass-checks
         # for implementation details
-        def __instancecheck__(cls, inst):
-            return any(cls.__subclasscheck__(c)
-                       for c in (type(inst), inst.__class__))
+        def __instancecheck__(self, inst):
+            return any(self.__subclasscheck__(c) for c in (type(inst), inst.__class__))
 
         def __subclasscheck__(cls, sub):
             if cls is not DeprecatedClass.deprecated_class:
@@ -103,6 +104,7 @@ def create_deprecated_class(
                 warnings.warn(msg, warn_category, stacklevel=2)
             return super().__call__(*args, **kwargs)
 
+
     deprecated_cls = DeprecatedClass(name, (new_class,), clsdict or {})
 
     try:
@@ -121,9 +123,7 @@ def create_deprecated_class(
 
 
 def _clspath(cls, forced=None):
-    if forced is not None:
-        return forced
-    return f'{cls.__module__}.{cls.__name__}'
+    return forced if forced is not None else f'{cls.__module__}.{cls.__name__}'
 
 
 DEPRECATION_RULES = [

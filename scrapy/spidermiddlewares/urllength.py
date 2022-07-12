@@ -19,10 +19,10 @@ class UrlLengthMiddleware:
 
     @classmethod
     def from_settings(cls, settings):
-        maxlength = settings.getint('URLLENGTH_LIMIT')
-        if not maxlength:
+        if maxlength := settings.getint('URLLENGTH_LIMIT'):
+            return cls(maxlength)
+        else:
             raise NotConfigured
-        return cls(maxlength)
 
     def process_spider_output(self, response, result, spider):
         def _filter(request):

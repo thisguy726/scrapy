@@ -37,7 +37,7 @@ class CookieJar:
         if not IPV4_RE.search(req_host):
             hosts = potential_domain_matches(req_host)
             if '.' not in req_host:
-                hosts += [req_host + ".local"]
+                hosts += [f"{req_host}.local"]
         else:
             hosts = [req_host]
 
@@ -46,8 +46,7 @@ class CookieJar:
             if host in self.jar._cookies:
                 cookies += self.jar._cookies_for_domain(host, wreq)
 
-        attrs = self.jar._cookie_attrs(cookies)
-        if attrs:
+        if attrs := self.jar._cookie_attrs(cookies):
             if not wreq.has_header("Cookie"):
                 wreq.add_unredirected_header("Cookie", "; ".join(attrs))
 
@@ -103,7 +102,7 @@ def potential_domain_matches(domain):
             start = domain.index('.', start) + 1
     except ValueError:
         pass
-    return matches + ['.' + d for d in matches]
+    return matches + [f'.{d}' for d in matches]
 
 
 class _DummyLock:

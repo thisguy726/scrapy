@@ -23,7 +23,7 @@ def _iter_command_classes(module_name):
                 inspect.isclass(obj)
                 and issubclass(obj, ScrapyCommand)
                 and obj.__module__ == module.__name__
-                and not obj == ScrapyCommand
+                and obj != ScrapyCommand
             ):
                 yield obj
 
@@ -51,19 +51,16 @@ def _get_commands_from_entry_points(inproject, group='scrapy.commands'):
 def _get_commands_dict(settings, inproject):
     cmds = _get_commands_from_module('scrapy.commands', inproject)
     cmds.update(_get_commands_from_entry_points(inproject))
-    cmds_module = settings['COMMANDS_MODULE']
-    if cmds_module:
+    if cmds_module := settings['COMMANDS_MODULE']:
         cmds.update(_get_commands_from_module(cmds_module, inproject))
     return cmds
 
 
 def _pop_command_name(argv):
-    i = 0
-    for arg in argv[1:]:
+    for i, arg in enumerate(argv[1:]):
         if not arg.startswith('-'):
             del argv[i]
             return arg
-        i += 1
 
 
 def _print_header(settings, inproject):

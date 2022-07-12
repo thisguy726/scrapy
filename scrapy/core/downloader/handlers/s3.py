@@ -56,7 +56,7 @@ class S3DownloadHandler:
         p = urlparse_cached(request)
         scheme = 'https' if request.meta.get('is_secure') else 'http'
         bucket = p.hostname
-        path = p.path + '?' + p.query if p.query else p.path
+        path = f'{p.path}?{p.query}' if p.query else p.path
         url = f'{scheme}://{bucket}.s3.amazonaws.com{path}'
         if self.anon:
             request = request.replace(url=url)

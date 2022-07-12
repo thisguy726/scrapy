@@ -108,13 +108,13 @@ class FileTestCase(unittest.TestCase):
 
     def setUp(self):
         self.tmpname = self.mktemp()
-        with open(self.tmpname + '^', 'w') as f:
+        with open(f'{self.tmpname}^', 'w') as f:
             f.write('0123456789')
         handler = create_instance(FileDownloadHandler, None, get_crawler())
         self.download_request = handler.download_request
 
     def tearDown(self):
-        os.unlink(self.tmpname + '^')
+        os.unlink(f'{self.tmpname}^')
 
     def test_download(self):
         def _test(response):
@@ -123,7 +123,7 @@ class FileTestCase(unittest.TestCase):
             self.assertEqual(response.body, b'0123456789')
             self.assertEqual(response.protocol, None)
 
-        request = Request(path_to_file_uri(self.tmpname + '^'))
+        request = Request(path_to_file_uri(f'{self.tmpname}^'))
         assert request.url.upper().endswith('%5E')
         return self.download_request(request, Spider('foo')).addCallback(_test)
 
@@ -331,7 +331,7 @@ class HttpTestCase(unittest.TestCase):
         return self.download_request(request, Spider('foo')).addCallback(_test)
 
     def test_host_header_seted_in_request_headers(self):
-        host = self.host + ':' + str(self.portno)
+        host = f'{self.host}:{str(self.portno)}'
 
         def _test(response):
             self.assertEqual(response.body, host.encode())
@@ -339,11 +339,6 @@ class HttpTestCase(unittest.TestCase):
 
         request = Request(self.getURL('host'), headers={'Host': host})
         return self.download_request(request, Spider('foo')).addCallback(_test)
-
-        d = self.download_request(request, Spider('foo'))
-        d.addCallback(lambda r: r.body)
-        d.addCallback(self.assertEqual, b'localhost')
-        return d
 
     def test_content_length_zero_bodyless_post_request_headers(self):
         """Tests if "Content-Length: 0" is sent for bodyless POST requests.
@@ -496,9 +491,10 @@ class Http11TestCase(HttpTestCase):
         d = self.download_request(request, Spider('foo'))
 
         def checkDataLoss(failure):
-            if failure.check(ResponseFailed):
-                if any(r.check(_DataLoss) for r in failure.value.reasons):
-                    return None
+            if failure.check(ResponseFailed) and any(
+                r.check(_DataLoss) for r in failure.value.reasons
+            ):
+                return None
             return failure
 
         d.addCallback(lambda _: self.fail("No DataLoss exception"))
@@ -682,14 +678,6 @@ class Http11MockServerTestCase(unittest.TestCase):
 
         # See issue https://twistedmatrix.com/trac/ticket/8175
         raise unittest.SkipTest("xpayload fails on PY3")
-        request.headers.setdefault(b'Accept-Encoding', b'gzip,deflate')
-        request = request.replace(url=self.mockserver.url('/xpayload'))
-        yield crawler.crawl(seed=request)
-        # download_maxsize = 50 is enough for the gzipped response
-        failure = crawler.spider.meta.get('failure')
-        self.assertTrue(failure is None)
-        reason = crawler.spider.meta['close_reason']
-        self.assertTrue(reason, 'finished')
 
 
 class UriResource(resource.Resource):
@@ -702,10 +690,7 @@ class UriResource(resource.Resource):
         # Note: this is an ugly hack for CONNECT request timeout test.
         #       Returning some data here fail SSL/TLS handshake
         # ToDo: implement proper HTTPS proxy tests, not faking them.
-        if request.method != b'CONNECT':
-            return request.uri
-        else:
-            return b''
+        return request.uri if request.method != b'CONNECT' else b''
 
 
 class HttpProxyTestCase(unittest.TestCase):
@@ -1080,7 +1065,7 @@ class FTPTestCase(BaseFTPTestCase):
         from twisted.protocols.ftp import ConnectionLost
 
         meta = dict(self.req_meta)
-        meta.update({"ftp_password": 'invalid'})
+        meta["ftp_password"] = 'invalid'
         request = Request(url=f"ftp://127.0.0.1:{self.portNum}/file.txt",
                           meta=meta)
         d = self.download_handler.download_request(request, None)

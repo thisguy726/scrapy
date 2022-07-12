@@ -37,9 +37,7 @@ class H2ConnectionPool:
             self._pending_requests[key].append(d)
             return d
 
-        # Check if we already have a connection to the remote
-        conn = self._connections.get(key, None)
-        if conn:
+        if conn := self._connections.get(key, None):
             # Return this connection instance wrapped inside a deferred
             return defer.succeed(conn)
 

@@ -66,10 +66,7 @@ class RFC2616Policy:
             return False
         cc = self._parse_cachecontrol(request)
         # obey user-agent directive "Cache-Control: no-store"
-        if b'no-store' in cc:
-            return False
-        # Any other is eligible for caching
-        return True
+        return b'no-store' not in cc
 
     def should_cache_response(self, response, request):
         # What is cacheable - https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9.1
@@ -188,22 +185,13 @@ class RFC2616Policy:
             return (date - lastmodified) / 10
 
         # This request can be cached indefinitely
-        if response.status in (300, 301, 308):
-            return self.MAXAGE
-
-        # Insufficient information to compute fresshness lifetime
-        return 0
+        return self.MAXAGE if response.status in (300, 301, 308) else 0
 
     def _compute_current_age(self, response, request, now):
-        # Reference nsHttpResponseHead::ComputeCurrentAge
-        # https://dxr.mozilla.org/mozilla-central/source/netwerk/protocol/http/nsHttpResponseHead.cpp#658
-        currentage = 0
         # If Date header is not set we assume it is a fast connection, and
         # clock is in sync with the server
         date = rfc1123_to_epoch(response.headers.get(b'Date')) or now
-        if now > date:
-            currentage = now - date
-
+        currentage = now - date if now > date else 0
         if b'Age' in response.headers:
             try:
                 age = int(response.headers[b'Age'])
@@ -240,8 +228,7 @@ class DbmCacheStorage:
         headers = Headers(data['headers'])
         body = data['body']
         respcls = responsetypes.from_args(headers=headers, url=url)
-        response = respcls(url=url, headers=headers, status=status, body=body)
-        return response
+        return respcls(url=url, headers=headers, status=status, body=body)
 
     def store_response(self, spider, request, response):
         key = self._request_key(request)
@@ -300,8 +287,7 @@ class FilesystemCacheStorage:
         status = metadata['status']
         headers = Headers(headers_raw_to_dict(rawheaders))
         respcls = responsetypes.from_args(headers=headers, url=url)
-        response = respcls(url=url, headers=headers, status=status, body=body)
-        return response
+        return respcls(url=url, headers=headers, status=status, body=body)
 
     def store_response(self, spider, request, response):
         """Store the given response in the cache."""
@@ -330,7 +316,7 @@ class FilesystemCacheStorage:
 
     def _get_request_path(self, spider, request):
         key = request_fingerprint(request)
-        return os.path.join(self.cachedir, spider.name, key[0:2], key)
+        return os.path.join(self.cachedir, spider.name, key[:2], key)
 
     def _read_meta(self, spider, request):
         rpath = self._get_request_path(spider, request)

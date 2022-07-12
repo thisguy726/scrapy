@@ -149,9 +149,8 @@ class BaseSettingsTest(unittest.TestCase):
         self.assertCountEqual(self.settings.attributes.keys(),
                               ctrl_attributes.keys())
 
-        for key in ctrl_attributes.keys():
+        for key, ctrl_attr in ctrl_attributes.items():
             attr = self.settings.attributes[key]
-            ctrl_attr = ctrl_attributes[key]
             self.assertEqual(attr.value, ctrl_attr.value)
             self.assertEqual(attr.priority, ctrl_attr.priority)
 

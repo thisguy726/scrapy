@@ -18,11 +18,8 @@ class Headers(CaselessDict):
         """Normalize values to bytes"""
         if value is None:
             value = []
-        elif isinstance(value, (str, bytes)):
+        elif isinstance(value, (str, bytes)) or not hasattr(value, '__iter__'):
             value = [value]
-        elif not hasattr(value, '__iter__'):
-            value = [value]
-
         return [self._tobytes(x) for x in value]
 
     def _tobytes(self, x):
@@ -51,9 +48,7 @@ class Headers(CaselessDict):
         try:
             return super().__getitem__(key)
         except KeyError:
-            if def_val is not None:
-                return self.normvalue(def_val)
-            return []
+            return self.normvalue(def_val) if def_val is not None else []
 
     def setlist(self, key, list_):
         self[key] = list_

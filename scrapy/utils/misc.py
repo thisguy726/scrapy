@@ -76,12 +76,11 @@ def walk_modules(path):
     For example: walk_modules('scrapy.utils')
     """
 
-    mods = []
     mod = import_module(path)
-    mods.append(mod)
+    mods = [mod]
     if hasattr(mod, '__path__'):
         for _, subpath, ispkg in iter_modules(mod.__path__):
-            fullpath = path + '.' + subpath
+            fullpath = f'{path}.{subpath}'
             if ispkg:
                 mods += walk_modules(fullpath)
             else:
@@ -129,10 +128,10 @@ def md5sum(file):
     """
     m = hashlib.md5()
     while True:
-        d = file.read(8096)
-        if not d:
+        if d := file.read(8096):
+            m.update(d)
+        else:
             break
-        m.update(d)
     return m.hexdigest()
 
 
@@ -253,7 +252,7 @@ def warn_on_generator_with_return_value(spider, callable):
                 stacklevel=2,
             )
     except IndentationError:
-        callable_name = spider.__class__.__name__ + "." + callable.__name__
+        callable_name = f"{spider.__class__.__name__}.{callable.__name__}"
         warnings.warn(
             f'Unable to determine whether or not "{callable_name}" is a generator with a return value. '
             'This will not prevent your code from working, but it prevents Scrapy from detecting '

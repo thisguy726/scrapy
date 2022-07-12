@@ -57,8 +57,7 @@ class ScrapyClientTLSOptions(ClientTLSOptions):
                              x509name_to_string(server_cert.get_issuer()),
                              x509name_to_string(server_cert.get_subject()),
                              )
-                key_info = get_temp_key_info(connection._ssl)
-                if key_info:
+                if key_info := get_temp_key_info(connection._ssl):
                     logger.debug('SSL temp key: %s', key_info)
 
             try:

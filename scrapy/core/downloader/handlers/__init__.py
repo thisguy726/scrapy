@@ -69,10 +69,10 @@ class DownloadHandlers:
 
     def download_request(self, request, spider):
         scheme = urlparse_cached(request).scheme
-        handler = self._get_handler(scheme)
-        if not handler:
+        if handler := self._get_handler(scheme):
+            return handler.download_request(request, spider)
+        else:
             raise NotSupported(f"Unsupported URL scheme '{scheme}': {self._notconfigured[scheme]}")
-        return handler.download_request(request, spider)
 
     @defer.inlineCallbacks
     def _close(self, *_a, **_kw):

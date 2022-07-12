@@ -56,8 +56,7 @@ class HttpCompressionMiddleware:
         if request.method == 'HEAD':
             return response
         if isinstance(response, Response):
-            content_encoding = response.headers.getlist('Content-Encoding')
-            if content_encoding:
+            if content_encoding := response.headers.getlist('Content-Encoding'):
                 encoding = content_encoding.pop()
                 decoded_body = self._decode(response.body, encoding.lower())
                 if self.stats:
@@ -78,7 +77,7 @@ class HttpCompressionMiddleware:
         return response
 
     def _decode(self, body, encoding):
-        if encoding == b'gzip' or encoding == b'x-gzip':
+        if encoding in [b'gzip', b'x-gzip']:
             body = gunzip(body)
 
         if encoding == b'deflate':

@@ -184,18 +184,18 @@ class Stream:
     def check_request_url(self) -> bool:
         # Make sure that we are sending the request to the correct URL
         url = urlparse(self._request.url)
-        return (
-            url.netloc == str(self._protocol.metadata['uri'].host, 'utf-8')
-            or url.netloc == str(self._protocol.metadata['uri'].netloc, 'utf-8')
-            or url.netloc == f'{self._protocol.metadata["ip_address"]}:{self._protocol.metadata["uri"].port}'
-        )
+        return url.netloc in [
+            str(self._protocol.metadata['uri'].host, 'utf-8'),
+            str(self._protocol.metadata['uri'].netloc, 'utf-8'),
+            f'{self._protocol.metadata["ip_address"]}:{self._protocol.metadata["uri"].port}',
+        ]
 
     def _get_request_headers(self) -> List[Tuple[str, str]]:
         url = urlparse(self._request.url)
 
         path = url.path
         if url.query:
-            path += '?' + url.query
+            path += f'?{url.query}'
 
         # This pseudo-header field MUST NOT be empty for "http" or "https"
         # URIs; "http" or "https" URIs that do not contain a path component

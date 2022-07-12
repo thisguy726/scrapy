@@ -275,8 +275,10 @@ class DownloaderAwareSchedulerTestMixin:
             slot = downloader._get_slot_key(request, None)
             downloader.decrement(slot)
 
-        self.assertTrue(_is_scheduling_fair(list(s for u, s in _URLS_WITH_SLOTS),
-                                            dequeued_slots))
+        self.assertTrue(
+            _is_scheduling_fair([s for u, s in _URLS_WITH_SLOTS], dequeued_slots)
+        )
+
         self.assertEqual(sum(len(s.active) for s in downloader.slots.values()), 0)
 
 

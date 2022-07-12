@@ -35,8 +35,7 @@ class SitemapSpider(Spider):
         attributes, for example, you can filter locs with lastmod greater
         than a given date (see docs).
         """
-        for entry in entries:
-            yield entry
+        yield from entries
 
     def _parse_sitemap(self, response):
         if response.url.endswith('/robots.txt'):
@@ -85,9 +84,7 @@ class SitemapSpider(Spider):
 
 
 def regex(x):
-    if isinstance(x, str):
-        return re.compile(x)
-    return x
+    return re.compile(x) if isinstance(x, str) else x
 
 
 def iterloc(it, alt=False):

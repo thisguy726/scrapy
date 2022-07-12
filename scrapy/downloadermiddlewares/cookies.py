@@ -79,18 +79,20 @@ class CookiesMiddleware:
 
     def _debug_cookie(self, request, spider):
         if self.debug:
-            cl = [to_unicode(c, errors='replace')
-                  for c in request.headers.getlist('Cookie')]
-            if cl:
+            if cl := [
+                to_unicode(c, errors='replace')
+                for c in request.headers.getlist('Cookie')
+            ]:
                 cookies = "\n".join(f"Cookie: {c}\n" for c in cl)
                 msg = f"Sending cookies to: {request}\n{cookies}"
                 logger.debug(msg, extra={'spider': spider})
 
     def _debug_set_cookie(self, response, spider):
         if self.debug:
-            cl = [to_unicode(c, errors='replace')
-                  for c in response.headers.getlist('Set-Cookie')]
-            if cl:
+            if cl := [
+                to_unicode(c, errors='replace')
+                for c in response.headers.getlist('Set-Cookie')
+            ]:
                 cookies = "\n".join(f"Set-Cookie: {c}\n" for c in cl)
                 msg = f"Received cookies from: {response}\n{cookies}"
                 logger.debug(msg, extra={'spider': spider})

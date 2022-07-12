@@ -29,12 +29,14 @@ class XmliterTestCase(unittest.TestCase):
         """
 
         response = XmlResponse(url="http://example.com", body=body)
-        attrs = []
-        for x in self.xmliter(response, 'product'):
-            attrs.append((
+        attrs = [
+            (
                 x.attrib['id'],
                 x.xpath("name/text()").getall(),
-                x.xpath("./type/text()").getall()))
+                x.xpath("./type/text()").getall(),
+            )
+            for x in self.xmliter(response, 'product')
+        ]
 
         self.assertEqual(attrs,
                          [('001', ['Name 1'], ['Type 1']), ('002', ['Name 2'], ['Type 2'])])
@@ -94,11 +96,14 @@ class XmliterTestCase(unittest.TestCase):
             # Unicode body needs encoding information
             XmlResponse(url="http://example.com", body=body, encoding='utf-8'),
         ):
-            attrs = []
-            for x in self.xmliter(r, 'þingflokkur'):
-                attrs.append((x.attrib['id'],
-                              x.xpath('./skammstafanir/stuttskammstöfun/text()').getall(),
-                              x.xpath('./tímabil/fyrstaþing/text()').getall()))
+            attrs = [
+                (
+                    x.attrib['id'],
+                    x.xpath('./skammstafanir/stuttskammstöfun/text()').getall(),
+                    x.xpath('./tímabil/fyrstaþing/text()').getall(),
+                )
+                for x in self.xmliter(r, 'þingflokkur')
+            ]
 
             self.assertEqual(attrs,
                              [('26', ['-'], ['80']),
@@ -313,7 +318,7 @@ class UtilsCsvTestCase(unittest.TestCase):
         response = TextResponse(url="http://example.com/", body=body)
         csv = csviter(response)
 
-        result = [row for row in csv]
+        result = list(csv)
         self.assertEqual(result,
                          [{'id': '1', 'name': 'alpha', 'value': 'foobar'},
                           {'id': '2', 'name': 'unicode', 'value': '\xfan\xedc\xf3d\xe9\u203d'},
@@ -330,11 +335,19 @@ class UtilsCsvTestCase(unittest.TestCase):
         response = TextResponse(url="http://example.com/", body=body)
         csv = csviter(response, delimiter='\t')
 
-        self.assertEqual([row for row in csv],
-                         [{'id': '1', 'name': 'alpha', 'value': 'foobar'},
-                          {'id': '2', 'name': 'unicode', 'value': '\xfan\xedc\xf3d\xe9\u203d'},
-                          {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
-                          {'id': '4', 'name': 'empty', 'value': ''}])
+        self.assertEqual(
+            list(csv),
+            [
+                {'id': '1', 'name': 'alpha', 'value': 'foobar'},
+                {
+                    'id': '2',
+                    'name': 'unicode',
+                    'value': '\xfan\xedc\xf3d\xe9\u203d',
+                },
+                {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
+                {'id': '4', 'name': 'empty', 'value': ''},
+            ],
+        )
 
     def test_csviter_quotechar(self):
         body1 = get_testdata('feeds', 'feed-sample6.csv')
@@ -343,42 +356,75 @@ class UtilsCsvTestCase(unittest.TestCase):
         response1 = TextResponse(url="http://example.com/", body=body1)
         csv1 = csviter(response1, quotechar="'")
 
-        self.assertEqual([row for row in csv1],
-                         [{'id': '1', 'name': 'alpha', 'value': 'foobar'},
-                          {'id': '2', 'name': 'unicode', 'value': '\xfan\xedc\xf3d\xe9\u203d'},
-                          {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
-                          {'id': '4', 'name': 'empty', 'value': ''}])
+        self.assertEqual(
+            list(csv1),
+            [
+                {'id': '1', 'name': 'alpha', 'value': 'foobar'},
+                {
+                    'id': '2',
+                    'name': 'unicode',
+                    'value': '\xfan\xedc\xf3d\xe9\u203d',
+                },
+                {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
+                {'id': '4', 'name': 'empty', 'value': ''},
+            ],
+        )
+
 
         response2 = TextResponse(url="http://example.com/", body=body2)
         csv2 = csviter(response2, delimiter="|", quotechar="'")
 
-        self.assertEqual([row for row in csv2],
-                         [{'id': '1', 'name': 'alpha', 'value': 'foobar'},
-                          {'id': '2', 'name': 'unicode', 'value': '\xfan\xedc\xf3d\xe9\u203d'},
-                          {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
-                          {'id': '4', 'name': 'empty', 'value': ''}])
+        self.assertEqual(
+            list(csv2),
+            [
+                {'id': '1', 'name': 'alpha', 'value': 'foobar'},
+                {
+                    'id': '2',
+                    'name': 'unicode',
+                    'value': '\xfan\xedc\xf3d\xe9\u203d',
+                },
+                {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
+                {'id': '4', 'name': 'empty', 'value': ''},
+            ],
+        )
 
     def test_csviter_wrong_quotechar(self):
         body = get_testdata('feeds', 'feed-sample6.csv')
         response = TextResponse(url="http://example.com/", body=body)
         csv = csviter(response)
 
-        self.assertEqual([row for row in csv],
-                         [{"'id'": "1", "'name'": "'alpha'", "'value'": "'foobar'"},
-                          {"'id'": "2", "'name'": "'unicode'", "'value'": "'\xfan\xedc\xf3d\xe9\u203d'"},
-                          {"'id'": "'3'", "'name'": "'multi'", "'value'": "'foo"},
-                          {"'id'": "4", "'name'": "'empty'", "'value'": ""}])
+        self.assertEqual(
+            list(csv),
+            [
+                {"'id'": "1", "'name'": "'alpha'", "'value'": "'foobar'"},
+                {
+                    "'id'": "2",
+                    "'name'": "'unicode'",
+                    "'value'": "'\xfan\xedc\xf3d\xe9\u203d'",
+                },
+                {"'id'": "'3'", "'name'": "'multi'", "'value'": "'foo"},
+                {"'id'": "4", "'name'": "'empty'", "'value'": ""},
+            ],
+        )
 
     def test_csviter_delimiter_binary_response_assume_utf8_encoding(self):
         body = get_testdata('feeds', 'feed-sample3.csv').replace(b',', b'\t')
         response = Response(url="http://example.com/", body=body)
         csv = csviter(response, delimiter='\t')
 
-        self.assertEqual([row for row in csv],
-                         [{'id': '1', 'name': 'alpha', 'value': 'foobar'},
-                          {'id': '2', 'name': 'unicode', 'value': '\xfan\xedc\xf3d\xe9\u203d'},
-                          {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
-                          {'id': '4', 'name': 'empty', 'value': ''}])
+        self.assertEqual(
+            list(csv),
+            [
+                {'id': '1', 'name': 'alpha', 'value': 'foobar'},
+                {
+                    'id': '2',
+                    'name': 'unicode',
+                    'value': '\xfan\xedc\xf3d\xe9\u203d',
+                },
+                {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
+                {'id': '4', 'name': 'empty', 'value': ''},
+            ],
+        )
 
     def test_csviter_headers(self):
         sample = get_testdata('feeds', 'feed-sample3.csv').splitlines()
@@ -387,11 +433,19 @@ class UtilsCsvTestCase(unittest.TestCase):
         response = TextResponse(url="http://example.com/", body=body)
         csv = csviter(response, headers=[h.decode('utf-8') for h in headers])
 
-        self.assertEqual([row for row in csv],
-                         [{'id': '1', 'name': 'alpha', 'value': 'foobar'},
-                          {'id': '2', 'name': 'unicode', 'value': '\xfan\xedc\xf3d\xe9\u203d'},
-                          {'id': '3', 'name': 'multi', 'value': 'foo\nbar'},
-                          {'id': '4', 'name': 'empty', 'value': ''}])
+        self.assertEqual(
+            list(csv),
+            [
+                {'id': '1', 'name': 'alpha', 'value': 'foobar'},
+                {
+                    'id': '2',
+                    'name': 'unicode',
+                    'value': '\xfan\xedc\xf3d\xe9\u203d',
+                },
+                {'id': '3', 'name': 'multi', 'value': 'foo\nbar'},
+                {'id': '4', 'name': 'empty', 'value': ''},
+            ],
+        )
 
     def test_csviter_falserow(self):
         body = get_testdata('feeds', 'feed-sample3.csv')
@@ -400,11 +454,19 @@ class UtilsCsvTestCase(unittest.TestCase):
         response = TextResponse(url="http://example.com/", body=body)
         csv = csviter(response)
 
-        self.assertEqual([row for row in csv],
-                         [{'id': '1', 'name': 'alpha', 'value': 'foobar'},
-                          {'id': '2', 'name': 'unicode', 'value': '\xfan\xedc\xf3d\xe9\u203d'},
-                          {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
-                          {'id': '4', 'name': 'empty', 'value': ''}])
+        self.assertEqual(
+            list(csv),
+            [
+                {'id': '1', 'name': 'alpha', 'value': 'foobar'},
+                {
+                    'id': '2',
+                    'name': 'unicode',
+                    'value': '\xfan\xedc\xf3d\xe9\u203d',
+                },
+                {'id': '3', 'name': 'multi', 'value': "foo\nbar"},
+                {'id': '4', 'name': 'empty', 'value': ''},
+            ],
+        )
 
     def test_csviter_exception(self):
         body = get_testdata('feeds', 'feed-sample3.csv')

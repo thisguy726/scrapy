@@ -59,13 +59,17 @@ class ReferrerPolicy:
             Set url's query to null.
         Return url.
         """
-        if not url:
-            return None
-        return strip_url(url,
-                         strip_credentials=True,
-                         strip_fragment=True,
-                         strip_default_port=True,
-                         origin_only=origin_only)
+        return (
+            strip_url(
+                url,
+                strip_credentials=True,
+                strip_fragment=True,
+                strip_default_port=True,
+                origin_only=origin_only,
+            )
+            if url
+            else None
+        )
 
     def origin(self, url):
         """Return serialized origin (scheme, host, path) for a request or response URL."""
@@ -74,9 +78,7 @@ class ReferrerPolicy:
     def potentially_trustworthy(self, url):
         # Note: this does not follow https://w3c.github.io/webappsec-secure-contexts/#is-url-trustworthy
         parsed_url = urlparse(url)
-        if parsed_url.scheme in ('data',):
-            return False
-        return self.tls_protected(url)
+        return False if parsed_url.scheme in ('data',) else self.tls_protected(url)
 
     def tls_protected(self, url):
         return urlparse(url).scheme in ('https', 'ftps')
@@ -283,9 +285,8 @@ def _load_policy_class(policy, warning_only=False):
             msg = f"Could not load referrer policy {policy!r}"
             if not warning_only:
                 raise RuntimeError(msg)
-            else:
-                warnings.warn(msg, RuntimeWarning)
-                return None
+            warnings.warn(msg, RuntimeWarning)
+            return None
 
 
 class RefererMiddleware:
@@ -321,11 +322,10 @@ class RefererMiddleware:
         - otherwise, the policy from settings is used.
         """
         policy_name = request.meta.get('referrer_policy')
-        if policy_name is None:
-            if isinstance(resp_or_url, Response):
-                policy_header = resp_or_url.headers.get('Referrer-Policy')
-                if policy_header is not None:
-                    policy_name = to_unicode(policy_header.decode('latin1'))
+        if policy_name is None and isinstance(resp_or_url, Response):
+            policy_header = resp_or_url.headers.get('Referrer-Policy')
+            if policy_header is not None:
+                policy_name = to_unicode(policy_header.decode('latin1'))
         if policy_name is None:
             return self.default_policy()
 
@@ -342,9 +342,7 @@ class RefererMiddleware:
         return (_set_referer(r) for r in result or ())
 
     def request_scheduled(self, request, spider):
-        # check redirected request to patch "Referer" header if necessary
-        redirected_urls = request.meta.get('redirect_urls', [])
-        if redirected_urls:
+        if redirected_urls := request.meta.get('redirect_urls', []):
             request_referrer = request.headers.get('Referer')
             # we don't patch the referrer value if there is none
             if request_referrer is not None:

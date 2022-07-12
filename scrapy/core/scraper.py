@@ -145,9 +145,8 @@ class Scraper:
         """
         if isinstance(result, Response):
             return self.spidermw.scrape_response(self.call_spider, result, request, spider)
-        else:  # result is a Failure
-            dfd = self.call_spider(result, request, spider)
-            return dfd.addErrback(self._log_download_errors, result, request, spider)
+        dfd = self.call_spider(result, request, spider)
+        return dfd.addErrback(self._log_download_errors, result, request, spider)
 
     def call_spider(self, result: Union[Response, Failure], request: Request, spider: Spider) -> Deferred:
         if isinstance(result, Response):
@@ -189,9 +188,14 @@ class Scraper:
         if not result:
             return defer_succeed(None)
         it = iter_errback(result, self.handle_spider_error, request, response, spider)
-        dfd = parallel(it, self.concurrent_items, self._process_spidermw_output,
-                       request, response, spider)
-        return dfd
+        return parallel(
+            it,
+            self.concurrent_items,
+            self._process_spidermw_output,
+            request,
+            response,
+            spider,
+        )
 
     def _process_spidermw_output(self, output: Any, request: Request, response: Response,
                                  spider: Spider) -> Optional[Deferred]:
@@ -206,9 +210,7 @@ class Scraper:
             dfd = self.itemproc.process_item(output, spider)
             dfd.addBoth(self._itemproc_finished, output, response, spider)
             return dfd
-        elif output is None:
-            pass
-        else:
+        elif output is not None:
             typename = type(output).__name__
             logger.error(
                 'Spider must return request, item, or None, got %(typename)r in %(request)s',
@@ -234,19 +236,15 @@ class Scraper:
                     extra={'spider': spider},
                     exc_info=failure_to_exc_info(download_failure),
                 )
-            else:
-                errmsg = download_failure.getErrorMessage()
-                if errmsg:
-                    logkws = self.logformatter.download_error(
-                        download_failure, request, spider, errmsg)
-                    logger.log(
-                        *logformatter_adapter(logkws),
-                        extra={'spider': spider},
-                    )
+            elif errmsg := download_failure.getErrorMessage():
+                logkws = self.logformatter.download_error(
+                    download_failure, request, spider, errmsg)
+                logger.log(
+                    *logformatter_adapter(logkws),
+                    extra={'spider': spider},
+                )
 
-        if spider_failure is not download_failure:
-            return spider_failure
-        return None
+        return spider_failure if spider_failure is not download_failure else None
 
     def _itemproc_finished(self, output: Any, item: Any, response: Response, spider: Spider) -> None:
         """ItemProcessor finished for the given ``item`` and returned ``output``

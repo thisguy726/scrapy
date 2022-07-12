@@ -64,15 +64,11 @@ class BaseItemExporter:
             include_empty = self.export_empty_fields
 
         if self.fields_to_export is None:
-            if include_empty:
-                field_iter = item.field_names()
-            else:
-                field_iter = item.keys()
+            field_iter = item.field_names() if include_empty else item.keys()
+        elif include_empty:
+            field_iter = self.fields_to_export
         else:
-            if include_empty:
-                field_iter = self.fields_to_export
-            else:
-                field_iter = (x for x in self.fields_to_export if x in item)
+            field_iter = (x for x in self.fields_to_export if x in item)
 
         for field_name in field_iter:
             if field_name in item:

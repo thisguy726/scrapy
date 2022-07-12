@@ -95,7 +95,7 @@ class RedirectMiddleware(BaseRedirectMiddleware):
         location = safe_url_string(response.headers['Location'])
         if response.headers['Location'].startswith(b'//'):
             request_scheme = urlparse(request.url).scheme
-            location = request_scheme + '://' + location.lstrip('/')
+            location = f'{request_scheme}://' + location.lstrip('/')
 
         redirected_url = urljoin(request.url, location)
 

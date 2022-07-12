@@ -55,9 +55,10 @@ def get_oldest(class_name):
     """Get the oldest object for a specific class name"""
     for cls, wdict in live_refs.items():
         if cls.__name__ == class_name:
-            if not wdict:
+            if wdict:
+                return min(wdict.items(), key=itemgetter(1))[0]
+            else:
                 break
-            return min(wdict.items(), key=itemgetter(1))[0]
 
 
 def iter_all(class_name):

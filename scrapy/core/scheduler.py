@@ -21,10 +21,10 @@ class BaseSchedulerMeta(type):
     """
     Metaclass to check scheduler classes against the necessary interface
     """
-    def __instancecheck__(cls, instance):
-        return cls.__subclasscheck__(type(instance))
+    def __instancecheck__(self, instance):
+        return self.__subclasscheck__(type(instance))
 
-    def __subclasscheck__(cls, subclass):
+    def __subclasscheck__(self, subclass):
         return (
             hasattr(subclass, "has_pending_requests") and callable(subclass.has_pending_requests)
             and hasattr(subclass, "enqueue_request") and callable(subclass.enqueue_request)
@@ -238,8 +238,7 @@ class Scheduler(BaseScheduler):
         if not request.dont_filter and self.df.request_seen(request):
             self.df.log(request, self.spider)
             return False
-        dqok = self._dqpush(request)
-        if dqok:
+        if dqok := self._dqpush(request):
             self.stats.inc_value('scheduler/enqueued/disk', spider=self.spider)
         else:
             self._mqpush(request)
@@ -295,9 +294,7 @@ class Scheduler(BaseScheduler):
         self.mqs.push(request)
 
     def _dqpop(self) -> Optional[Request]:
-        if self.dqs is not None:
-            return self.dqs.pop()
-        return None
+        return self.dqs.pop() if self.dqs is not None else None
 
     def _mq(self):
         """ Create a new priority queue instance, with in-memory storage """

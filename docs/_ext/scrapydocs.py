@@ -112,28 +112,28 @@ def setup(app):
 
 
 def source_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
-    ref = 'https://github.com/scrapy/scrapy/blob/master/' + text
+    ref = f'https://github.com/scrapy/scrapy/blob/master/{text}'
     set_classes(options)
     node = nodes.reference(rawtext, text, refuri=ref, **options)
     return [node], []
 
 
 def issue_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
-    ref = 'https://github.com/scrapy/scrapy/issues/' + text
+    ref = f'https://github.com/scrapy/scrapy/issues/{text}'
     set_classes(options)
-    node = nodes.reference(rawtext, 'issue ' + text, refuri=ref, **options)
+    node = nodes.reference(rawtext, f'issue {text}', refuri=ref, **options)
     return [node], []
 
 
 def commit_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
-    ref = 'https://github.com/scrapy/scrapy/commit/' + text
+    ref = f'https://github.com/scrapy/scrapy/commit/{text}'
     set_classes(options)
-    node = nodes.reference(rawtext, 'commit ' + text, refuri=ref, **options)
+    node = nodes.reference(rawtext, f'commit {text}', refuri=ref, **options)
     return [node], []
 
 
 def rev_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
-    ref = 'http://hg.scrapy.org/scrapy/changeset/' + text
+    ref = f'http://hg.scrapy.org/scrapy/changeset/{text}'
     set_classes(options)
-    node = nodes.reference(rawtext, 'r' + text, refuri=ref, **options)
+    node = nodes.reference(rawtext, f'r{text}', refuri=ref, **options)
     return [node], []

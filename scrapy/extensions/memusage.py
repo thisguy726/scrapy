@@ -75,23 +75,24 @@ class MemoryUsage:
         self.crawler.stats.max_value('memusage/max', self.get_virtual_size())
 
     def _check_limit(self):
-        if self.get_virtual_size() > self.limit:
-            self.crawler.stats.set_value('memusage/limit_reached', 1)
-            mem = self.limit / 1024 / 1024
-            logger.error("Memory usage exceeded %(memusage)dM. Shutting down Scrapy...",
-                         {'memusage': mem}, extra={'crawler': self.crawler})
-            if self.notify_mails:
-                subj = (
-                    f"{self.crawler.settings['BOT_NAME']} terminated: "
-                    f"memory usage exceeded {mem}M at {socket.gethostname()}"
-                )
-                self._send_report(self.notify_mails, subj)
-                self.crawler.stats.set_value('memusage/limit_notified', 1)
+        if self.get_virtual_size() <= self.limit:
+            return
+        self.crawler.stats.set_value('memusage/limit_reached', 1)
+        mem = self.limit / 1024 / 1024
+        logger.error("Memory usage exceeded %(memusage)dM. Shutting down Scrapy...",
+                     {'memusage': mem}, extra={'crawler': self.crawler})
+        if self.notify_mails:
+            subj = (
+                f"{self.crawler.settings['BOT_NAME']} terminated: "
+                f"memory usage exceeded {mem}M at {socket.gethostname()}"
+            )
+            self._send_report(self.notify_mails, subj)
+            self.crawler.stats.set_value('memusage/limit_notified', 1)
 
-            if self.crawler.engine.spider is not None:
-                self.crawler.engine.close_spider(self.crawler.engine.spider, 'memusage_exceeded')
-            else:
-                self.crawler.stop()
+        if self.crawler.engine.spider is not None:
+            self.crawler.engine.close_spider(self.crawler.engine.spider, 'memusage_exceeded')
+        else:
+            self.crawler.stop()
 
     def _check_warning(self):
         if self.warned:  # warn only once

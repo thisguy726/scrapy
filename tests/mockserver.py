@@ -25,13 +25,12 @@ from scrapy.utils.test import get_testenv
 
 
 def getarg(request, name, default=None, type=None):
-    if name in request.args:
-        value = request.args[name][0]
-        if type is not None:
-            value = type(value)
-        return value
-    else:
+    if name not in request.args:
         return default
+    value = request.args[name][0]
+    if type is not None:
+        value = type(value)
+    return value
 
 
 # most of the following resources are copied from twisted.web.test.test_webclient
@@ -84,9 +83,7 @@ class PayloadResource(resource.Resource):
     def render(self, request):
         data = request.content.read()
         contentLength = request.requestHeaders.getRawHeaders(b"content-length")[0]
-        if len(data) != 100 or int(contentLength) != 100:
-            return b"ERROR"
-        return data
+        return b"ERROR" if len(data) != 100 or int(contentLength) != 100 else data
 
 
 class BrokenDownloadResource(resource.Resource):
@@ -145,8 +142,7 @@ class Delay(LeafResource):
 
     def render_GET(self, request):
         n = getarg(request, b"n", 1, type=float)
-        b = getarg(request, b"b", 1, type=int)
-        if b:
+        if b := getarg(request, b"b", 1, type=int):
             # send headers now and delay body
             request.write('')
         self.deferRequest(request, n, self._delayedRender, request, n)
@@ -185,11 +181,13 @@ class Echo(LeafResource):
 
     def render_GET(self, request):
         output = {
-            'headers': dict(
-                (to_unicode(k), [to_unicode(v) for v in vs])
-                for k, vs in request.requestHeaders.getAllRawHeaders()),
+            'headers': {
+                to_unicode(k): [to_unicode(v) for v in vs]
+                for k, vs in request.requestHeaders.getAllRawHeaders()
+            },
             'body': to_unicode(request.content.read()),
         }
+
         return to_bytes(json.dumps(output))
     render_POST = render_GET
 
@@ -341,7 +339,7 @@ class MockFTPServer:
         self.proc.communicate()
 
     def url(self, path):
-        return 'ftp://127.0.0.1:2121/' + path
+        return f'ftp://127.0.0.1:2121/{path}'
 
 
 def ssl_context_factory(keyfile='keys/localhost.key', certfile='keys/localhost.crt', cipher_string=None):

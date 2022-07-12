@@ -287,10 +287,14 @@ class FilesPipelineTestCaseCustomSettings(unittest.TestCase):
             "FILES_RESULT_FIELD": random_string(),
             "FILES_STORE": self.tempdir
         }
-        if not prefix:
-            return settings
-
-        return {prefix.upper() + "_" + k if k != "FILES_STORE" else k: v for k, v in settings.items()}
+        return (
+            {
+                f"{prefix.upper()}_{k}" if k != "FILES_STORE" else k: v
+                for k, v in settings.items()
+            }
+            if prefix
+            else settings
+        )
 
     def _generate_fake_pipeline(self):
 
@@ -368,7 +372,7 @@ class FilesPipelineTestCaseCustomSettings(unittest.TestCase):
         user_pipeline = UserDefinedFilesPipeline.from_settings(Settings(settings))
         for pipe_attr, settings_attr, pipe_inst_attr in self.file_cls_attr_settings_map:
             # Values from settings for custom pipeline should be set on pipeline instance.
-            custom_value = settings.get(prefix + "_" + settings_attr)
+            custom_value = settings.get(f"{prefix}_{settings_attr}")
             self.assertNotEqual(custom_value, self.default_cls_settings[pipe_attr])
             self.assertEqual(getattr(user_pipeline, pipe_inst_attr), custom_value)
 
@@ -382,7 +386,7 @@ class FilesPipelineTestCaseCustomSettings(unittest.TestCase):
         settings = self._generate_fake_settings(prefix=prefix)
         user_pipeline = pipeline_cls.from_settings(Settings(settings))
         for pipe_cls_attr, settings_attr, pipe_inst_attr in self.file_cls_attr_settings_map:
-            custom_value = settings.get(prefix + "_" + settings_attr)
+            custom_value = settings.get(f"{prefix}_{settings_attr}")
             self.assertNotEqual(custom_value, self.default_cls_settings[pipe_cls_attr])
             self.assertEqual(getattr(user_pipeline, pipe_inst_attr), custom_value)
 

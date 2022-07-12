@@ -36,8 +36,7 @@ class TelnetExtensionTest(unittest.TestCase):
             console.username.encode('utf8'),
             console.password.encode('utf8')
         )
-        d = portal.login(creds, None, ITelnetProtocol)
-        yield d
+        yield portal.login(creds, None, ITelnetProtocol)
         console.stop_listening()
 
     @defer.inlineCallbacks
@@ -48,6 +47,5 @@ class TelnetExtensionTest(unittest.TestCase):
         }
         console, portal = self._get_console_and_portal(settings=settings)
         creds = credentials.UsernamePassword(b'user', b'pass')
-        d = portal.login(creds, None, ITelnetProtocol)
-        yield d
+        yield portal.login(creds, None, ITelnetProtocol)
         console.stop_listening()

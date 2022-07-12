@@ -69,12 +69,10 @@ class TestSpider(Spider):
 
     def parse_item(self, response):
         adapter = ItemAdapter(self.item_cls())
-        m = self.name_re.search(response.text)
-        if m:
+        if m := self.name_re.search(response.text):
             adapter['name'] = m.group(1)
         adapter['url'] = response.url
-        m = self.price_re.search(response.text)
-        if m:
+        if m := self.price_re.search(response.text):
             adapter['price'] = m.group(1)
         return adapter.item
 
@@ -503,7 +501,6 @@ class EngineTest(unittest.TestCase):
             self.assertEqual(str(warning_list[0].message), "ExecutionEngine.has_capacity is deprecated")
 
 
-if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
-        start_test_site(debug=True)
-        reactor.run()
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == 'runserver':
+    start_test_site(debug=True)
+    reactor.run()

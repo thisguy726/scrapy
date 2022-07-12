@@ -5,8 +5,8 @@ from twisted.python.failure import Failure
 
 from scrapy.utils.request import referer_str
 
-SCRAPEDMSG = "Scraped from %(src)s" + os.linesep + "%(item)s"
-DROPPEDMSG = "Dropped: %(exception)s" + os.linesep + "%(item)s"
+SCRAPEDMSG = f"Scraped from %(src)s{os.linesep}%(item)s"
+DROPPEDMSG = f"Dropped: %(exception)s{os.linesep}%(item)s"
 CRAWLEDMSG = "Crawled (%(status)s) %(request)s%(request_flags)s (referer: %(referer)s)%(response_flags)s"
 ITEMERRORMSG = "Error processing %(item)s"
 SPIDERERRORMSG = "Spider error processing %(request)s (referer: %(referer)s)"
@@ -72,10 +72,7 @@ class LogFormatter:
 
     def scraped(self, item, response, spider):
         """Logs a message when an item is scraped by a spider."""
-        if isinstance(response, Failure):
-            src = response.getErrorMessage()
-        else:
-            src = response
+        src = response.getErrorMessage() if isinstance(response, Failure) else response
         return {
             'level': logging.DEBUG,
             'msg': SCRAPEDMSG,

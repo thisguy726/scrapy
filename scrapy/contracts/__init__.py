@@ -79,12 +79,11 @@ class ContractsManager:
 
     def tested_methods_from_spidercls(self, spidercls):
         is_method = re.compile(r"^\s*@", re.MULTILINE).search
-        methods = []
-        for key, value in getmembers(spidercls):
-            if callable(value) and value.__doc__ and is_method(value.__doc__):
-                methods.append(key)
-
-        return methods
+        return [
+            key
+            for key, value in getmembers(spidercls)
+            if callable(value) and value.__doc__ and is_method(value.__doc__)
+        ]
 
     def extract_contracts(self, method):
         contracts = []
@@ -112,38 +111,38 @@ class ContractsManager:
         return requests
 
     def from_method(self, method, results):
-        contracts = self.extract_contracts(method)
-        if contracts:
-            request_cls = Request
+        if not (contracts := self.extract_contracts(method)):
+            return
+        request_cls = Request
+        for contract in contracts:
+            if contract.request_cls is not None:
+                request_cls = contract.request_cls
+
+        # calculate request args
+        args, kwargs = get_spec(request_cls.__init__)
+
+        # Don't filter requests to allow
+        # testing different callbacks on the same URL.
+        kwargs['dont_filter'] = True
+        kwargs['callback'] = method
+
+        for contract in contracts:
+            kwargs = contract.adjust_request_args(kwargs)
+
+        args.remove('self')
+
+        # check if all positional arguments are defined in kwargs
+        if set(args).issubset(set(kwargs)):
+            request = request_cls(**kwargs)
+
+            # execute pre and post hooks in order
+            for contract in reversed(contracts):
+                request = contract.add_pre_hook(request, results)
             for contract in contracts:
-                if contract.request_cls is not None:
-                    request_cls = contract.request_cls
+                request = contract.add_post_hook(request, results)
 
-            # calculate request args
-            args, kwargs = get_spec(request_cls.__init__)
-
-            # Don't filter requests to allow
-            # testing different callbacks on the same URL.
-            kwargs['dont_filter'] = True
-            kwargs['callback'] = method
-
-            for contract in contracts:
-                kwargs = contract.adjust_request_args(kwargs)
-
-            args.remove('self')
-
-            # check if all positional arguments are defined in kwargs
-            if set(args).issubset(set(kwargs)):
-                request = request_cls(**kwargs)
-
-                # execute pre and post hooks in order
-                for contract in reversed(contracts):
-                    request = contract.add_pre_hook(request, results)
-                for contract in contracts:
-                    request = contract.add_post_hook(request, results)
-
-                self._clean_req(request, method, results)
-                return request
+            self._clean_req(request, method, results)
+            return request
 
     def _clean_req(self, request, method, results):
         """ stop the request from returning objects and records any errors """

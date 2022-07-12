@@ -99,7 +99,7 @@ class Downloader:
     def _get_slot(self, request, spider):
         key = self._get_slot_key(request, spider)
         if key not in self.slots:
-            conc = self.ip_concurrency if self.ip_concurrency else self.domain_concurrency
+            conc = self.ip_concurrency or self.domain_concurrency
             conc, delay = _get_concurrency_delay(conc, spider, self.settings)
             self.slots[key] = Slot(conc, delay, self.randomize_delay)
 

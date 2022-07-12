@@ -185,16 +185,18 @@ ITEM_PIPELINES = {{'{self.project_name}.pipelines.MyPipeline': 1}}
     def test_crawlspider_matching_rule_callback_set(self):
         """If a rule matches the URL, use it's defined callback."""
         status, out, stderr = yield self.execute(
-            ['--spider', 'goodcrawl' + self.spider_name, '-r', self.url('/html')]
+            ['--spider', f'goodcrawl{self.spider_name}', '-r', self.url('/html')]
         )
+
         self.assertIn("""[{}, {'foo': 'bar'}]""", _textmode(out))
 
     @defer.inlineCallbacks
     def test_crawlspider_matching_rule_default_callback(self):
         """If a rule match but it has no callback set, use the 'parse' callback."""
         status, out, stderr = yield self.execute(
-            ['--spider', 'goodcrawl' + self.spider_name, '-r', self.url('/text')]
+            ['--spider', f'goodcrawl{self.spider_name}', '-r', self.url('/text')]
         )
+
         self.assertIn("""[{}, {'nomatch': 'default'}]""", _textmode(out))
 
     @defer.inlineCallbacks
@@ -209,16 +211,23 @@ ITEM_PIPELINES = {{'{self.project_name}.pipelines.MyPipeline': 1}}
     @defer.inlineCallbacks
     def test_crawlspider_missing_callback(self):
         status, out, stderr = yield self.execute(
-            ['--spider', 'badcrawl' + self.spider_name, '-r', self.url('/html')]
+            ['--spider', f'badcrawl{self.spider_name}', '-r', self.url('/html')]
         )
+
         self.assertRegex(_textmode(out), r"""# Scraped Items  -+\n\[\]""")
 
     @defer.inlineCallbacks
     def test_crawlspider_no_matching_rule(self):
         """The requested URL has no matching rule, so no items should be scraped"""
         status, out, stderr = yield self.execute(
-            ['--spider', 'badcrawl' + self.spider_name, '-r', self.url('/enc-gb18030')]
+            [
+                '--spider',
+                f'badcrawl{self.spider_name}',
+                '-r',
+                self.url('/enc-gb18030'),
+            ]
         )
+
         self.assertRegex(_textmode(out), r"""# Scraped Items  -+\n\[\]""")
         self.assertIn("""Cannot find a rule that matches""", _textmode(stderr))
 

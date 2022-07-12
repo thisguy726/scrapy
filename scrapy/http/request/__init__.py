@@ -56,7 +56,7 @@ class Request(object_ref):
         cb_kwargs: Optional[dict] = None,
     ) -> None:
         self._encoding = encoding  # this one has to be set first
-        self.method = str(method).upper()
+        self.method = method.upper()
         self._set_url(url)
         self._set_body(body)
         if not isinstance(priority, int):
@@ -188,7 +188,7 @@ class Request(object_ref):
         for attr in self.attributes:
             d.setdefault(attr, getattr(self, attr))
         if type(self) is not Request:
-            d["_class"] = self.__module__ + '.' + self.__class__.__name__
+            d["_class"] = f'{self.__module__}.{self.__class__.__name__}'
         return d
 
 

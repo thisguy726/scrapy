@@ -65,8 +65,7 @@ class ScrapyH2Agent:
     def _get_agent(self, request: Request, timeout: Optional[float]) -> H2Agent:
         from twisted.internet import reactor
         bind_address = request.meta.get('bindaddress') or self._bind_address
-        proxy = request.meta.get('proxy')
-        if proxy:
+        if proxy := request.meta.get('proxy'):
             _, _, proxy_host, proxy_port, proxy_params = _parse(proxy)
             scheme = _parse(request.url)[0]
             proxy_host = proxy_host.decode()

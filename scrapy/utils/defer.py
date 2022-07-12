@@ -141,13 +141,12 @@ def deferred_from_coro(o) -> Any:
     if isinstance(o, Deferred):
         return o
     if asyncio.isfuture(o) or inspect.isawaitable(o):
-        if not is_asyncio_reactor_installed():
-            # wrapping the coroutine directly into a Deferred, this doesn't work correctly with coroutines
-            # that use asyncio, e.g. "await asyncio.sleep(1)"
-            return ensureDeferred(o)
-        else:
-            # wrapping the coroutine into a Future and then into a Deferred, this requires AsyncioSelectorReactor
-            return Deferred.fromFuture(asyncio.ensure_future(o))
+        return (
+            Deferred.fromFuture(asyncio.ensure_future(o))
+            if is_asyncio_reactor_installed()
+            else ensureDeferred(o)
+        )
+
     return o
 
 
@@ -226,7 +225,4 @@ def maybe_deferred_to_future(d: Deferred) -> Union[Deferred, Future]:
                 d = treq.get('https://example.com/additional')
                 extra_response = await maybe_deferred_to_future(d)
     """
-    if not is_asyncio_reactor_installed():
-        return d
-    else:
-        return deferred_to_future(d)
+    return deferred_to_future(d) if is_asyncio_reactor_installed() else d

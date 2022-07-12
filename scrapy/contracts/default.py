@@ -76,11 +76,7 @@ class ReturnsContract(Contract):
             self.max_bound = float('inf')
 
     def post_process(self, output):
-        occurrences = 0
-        for x in output:
-            if self.obj_type_verifier(x):
-                occurrences += 1
-
+        occurrences = sum(1 for x in output if self.obj_type_verifier(x))
         assertion = (self.min_bound <= occurrences <= self.max_bound)
 
         if not assertion:
@@ -102,7 +98,8 @@ class ScrapesContract(Contract):
     def post_process(self, output):
         for x in output:
             if is_item(x):
-                missing = [arg for arg in self.args if arg not in ItemAdapter(x)]
-                if missing:
+                if missing := [
+                    arg for arg in self.args if arg not in ItemAdapter(x)
+                ]:
                     missing_fields = ", ".join(missing)
                     raise ContractFail(f"Missing fields: {missing_fields}")

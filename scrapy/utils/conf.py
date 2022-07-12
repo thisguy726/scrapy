@@ -86,8 +86,7 @@ def init_env(project='default', set_syspath=True):
     cfg = get_config()
     if cfg.has_option('settings', project):
         os.environ['SCRAPY_SETTINGS_MODULE'] = cfg.get('settings', project)
-    closest = closest_scrapy_cfg()
-    if closest:
+    if closest := closest_scrapy_cfg():
         projdir = os.path.dirname(closest)
         if set_syspath and projdir not in sys.path:
             sys.path.append(projdir)
@@ -106,9 +105,10 @@ def get_sources(use_closest=True):
     sources = [
         '/etc/scrapy.cfg',
         r'c:\scrapy\scrapy.cfg',
-        xdg_config_home + '/scrapy.cfg',
+        f'{xdg_config_home}/scrapy.cfg',
         os.path.expanduser('~/.scrapy.cfg'),
     ]
+
     if use_closest:
         sources.append(closest_scrapy_cfg())
     return sources

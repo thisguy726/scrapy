@@ -29,10 +29,11 @@ except ImportError:
     skip_pillow = 'Missing Python Imaging Library, install https://pypi.python.org/pypi/Pillow'
 else:
     encoders = {'jpeg_encoder', 'jpeg_decoder'}
-    if not encoders.issubset(set(Image.core.__dict__)):
-        skip_pillow = 'Missing JPEG encoders'
-    else:
-        skip_pillow = None
+    skip_pillow = (
+        None
+        if encoders.issubset(set(Image.core.__dict__))
+        else 'Missing JPEG encoders'
+    )
 
 
 def _mocked_download_func(request, info):
@@ -274,10 +275,14 @@ class ImagesPipelineTestCaseCustomSettings(unittest.TestCase):
                 'big': (random.randint(1, 1000), random.randint(1, 1000))
             }
         }
-        if not prefix:
-            return settings
-
-        return {prefix.upper() + "_" + k if k != "IMAGES_STORE" else k: v for k, v in settings.items()}
+        return (
+            {
+                f"{prefix.upper()}_{k}" if k != "IMAGES_STORE" else k: v
+                for k, v in settings.items()
+            }
+            if prefix
+            else settings
+        )
 
     def _generate_fake_pipeline_subclass(self):
         """
@@ -369,7 +374,7 @@ class ImagesPipelineTestCaseCustomSettings(unittest.TestCase):
         user_pipeline = UserDefinedImagePipeline.from_settings(Settings(settings))
         for pipe_attr, settings_attr in self.img_cls_attribute_names:
             # Values from settings for custom pipeline should be set on pipeline instance.
-            custom_value = settings.get(prefix + "_" + settings_attr)
+            custom_value = settings.get(f"{prefix}_{settings_attr}")
             self.assertNotEqual(custom_value, self.default_pipeline_settings[pipe_attr])
             self.assertEqual(getattr(user_pipeline, pipe_attr.lower()), custom_value)
 
@@ -383,7 +388,7 @@ class ImagesPipelineTestCaseCustomSettings(unittest.TestCase):
         settings = self._generate_fake_settings(prefix=prefix)
         user_pipeline = pipeline_cls.from_settings(Settings(settings))
         for pipe_attr, settings_attr in self.img_cls_attribute_names:
-            custom_value = settings.get(prefix + "_" + settings_attr)
+            custom_value = settings.get(f"{prefix}_{settings_attr}")
             self.assertNotEqual(custom_value, self.default_pipeline_settings[pipe_attr])
             self.assertEqual(getattr(user_pipeline, pipe_attr.lower()), custom_value)
 

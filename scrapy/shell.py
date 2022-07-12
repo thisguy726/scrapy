@@ -135,20 +135,34 @@ class Shell:
         print(self.get_help())
 
     def get_help(self):
-        b = []
-        b.append("Available Scrapy objects:")
-        b.append("  scrapy     scrapy module (contains scrapy.Request, scrapy.Selector, etc)")
-        for k, v in sorted(self.vars.items()):
-            if self._is_relevant(v):
-                b.append(f"  {k:<10} {v}")
+        b = [
+            "Available Scrapy objects:",
+            "  scrapy     scrapy module (contains scrapy.Request, scrapy.Selector, etc)",
+        ]
+
+        b.extend(
+            f"  {k:<10} {v}"
+            for k, v in sorted(self.vars.items())
+            if self._is_relevant(v)
+        )
+
         b.append("Useful shortcuts:")
         if self.inthread:
-            b.append("  fetch(url[, redirect=True]) "
-                     "Fetch URL and update local objects (by default, redirects are followed)")
-            b.append("  fetch(req)                  "
-                     "Fetch a scrapy.Request and update local objects ")
-        b.append("  shelp()           Shell help (print this help)")
-        b.append("  view(response)    View response in a browser")
+            b.extend(
+                (
+                    "  fetch(url[, redirect=True]) "
+                    "Fetch URL and update local objects (by default, redirects are followed)",
+                    "  fetch(req)                  "
+                    "Fetch a scrapy.Request and update local objects ",
+                )
+            )
+
+        b.extend(
+            (
+                "  shelp()           Shell help (print this help)",
+                "  view(response)    View response in a browser",
+            )
+        )
 
         return "\n".join(f"[s] {line}" for line in b)
 

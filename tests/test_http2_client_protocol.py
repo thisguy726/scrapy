@@ -143,9 +143,9 @@ class QueryParams(LeafResource):
         request.setHeader('Content-Type', 'application/json; charset=UTF-8')
         request.setHeader('Content-Encoding', 'UTF-8')
 
-        query_params = {}
-        for k, v in request.args.items():
-            query_params[str(k, 'utf-8')] = str(v[0], 'utf-8')
+        query_params = {
+            str(k, 'utf-8'): str(v[0], 'utf-8') for k, v in request.args.items()
+        }
 
         return bytes(json.dumps(query_params), 'utf-8')
 
@@ -156,9 +156,10 @@ class RequestHeaders(LeafResource):
     def render_GET(self, request: TxRequest):
         request.setHeader('Content-Type', 'application/json; charset=UTF-8')
         request.setHeader('Content-Encoding', 'UTF-8')
-        headers = {}
-        for k, v in request.requestHeaders.getAllRawHeaders():
-            headers[str(k, 'utf-8')] = str(v[0], 'utf-8')
+        headers = {
+            str(k, 'utf-8'): str(v[0], 'utf-8')
+            for k, v in request.requestHeaders.getAllRawHeaders()
+        }
 
         return bytes(json.dumps(headers), 'utf-8')
 
@@ -237,7 +238,7 @@ class Https2ClientProtocolTestCase(TestCase):
         :param path: Should have / at the starting compulsorily if not empty
         :return: Complete url
         """
-        assert len(path) > 0 and (path[0] == '/' or path[0] == '&')
+        assert len(path) > 0 and path[0] in ['/', '&']
         return f'{self.scheme}://{self.hostname}:{self.port_number}{path}'
 
     def make_request(self, request: Request) -> Deferred:

@@ -23,9 +23,12 @@ _collect_string_content = etree.XPath("string()")
 
 
 def _nons(tag):
-    if isinstance(tag, str):
-        if tag[0] == '{' and tag[1:len(XHTML_NAMESPACE) + 1] == XHTML_NAMESPACE:
-            return tag.split('}')[-1]
+    if (
+        isinstance(tag, str)
+        and tag[0] == '{'
+        and tag[1 : len(XHTML_NAMESPACE) + 1] == XHTML_NAMESPACE
+    ):
+        return tag.split('}')[-1]
     return tag
 
 
@@ -93,9 +96,7 @@ class LxmlParserLinkExtractor:
         return self._deduplicate_if_needed(links)
 
     def _deduplicate_if_needed(self, links):
-        if self.unique:
-            return unique_list(links, key=self.link_key)
-        return links
+        return unique_list(links, key=self.link_key) if self.unique else links
 
 
 class LxmlLinkExtractor(FilteringLinkExtractor):

@@ -87,7 +87,7 @@ class FilteringLinkExtractor:
         self.canonicalize = canonicalize
         if deny_extensions is None:
             deny_extensions = IGNORED_EXTENSIONS
-        self.deny_extensions = {'.' + e for e in arg_to_iter(deny_extensions)}
+        self.deny_extensions = {f'.{e}' for e in arg_to_iter(deny_extensions)}
         self.restrict_text = [x if isinstance(x, _re_type) else re.compile(x)
                               for x in arg_to_iter(restrict_text)]
 
@@ -105,9 +105,7 @@ class FilteringLinkExtractor:
             return False
         if self.deny_extensions and url_has_any_extension(parsed_url, self.deny_extensions):
             return False
-        if self.restrict_text and not _matches(link.text, self.restrict_text):
-            return False
-        return True
+        return bool(not self.restrict_text or _matches(link.text, self.restrict_text))
 
     def matches(self, url):
 

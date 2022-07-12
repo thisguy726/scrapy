@@ -273,6 +273,8 @@ class CrawlSpiderTest(SpiderTest):
 
         response = HtmlResponse("http://example.org/somepage/index.html", body=self.test_body)
 
+
+
         class _CrawlSpider(self.spider_class):
             name = "test"
             allowed_domains = ['example.org']
@@ -281,8 +283,8 @@ class CrawlSpiderTest(SpiderTest):
             )
 
             def dummy_process_links(self, links):
-                for link in links:
-                    yield link
+                yield from links
+
 
         spider = _CrawlSpider()
         output = list(spider._requests_to_follow(response))

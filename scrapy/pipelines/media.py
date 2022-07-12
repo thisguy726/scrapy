@@ -150,7 +150,7 @@ class MediaPipeline:
 
         if 'item' not in sig.parameters:
             old_params = str(sig)[1:-1]
-            new_params = old_params + ", *, item=None"
+            new_params = f"{old_params}, *, item=None"
             warn(f'{func.__name__}(self, {old_params}) is deprecated, '
                  f'please use {func.__name__}(self, {new_params})',
                  ScrapyDeprecationWarning, stacklevel=2)
@@ -168,15 +168,12 @@ class MediaPipeline:
         if self.download_func:
             # this ugly code was left only to support tests. TODO: remove
             dfd = mustbe_deferred(self.download_func, request, info.spider)
-            dfd.addCallbacks(
-                callback=self.media_downloaded, callbackArgs=(request, info), callbackKeywords={'item': item},
-                errback=self.media_failed, errbackArgs=(request, info))
         else:
             self._modify_media_request(request)
             dfd = self.crawler.engine.download(request)
-            dfd.addCallbacks(
-                callback=self.media_downloaded, callbackArgs=(request, info), callbackKeywords={'item': item},
-                errback=self.media_failed, errbackArgs=(request, info))
+        dfd.addCallbacks(
+            callback=self.media_downloaded, callbackArgs=(request, info), callbackKeywords={'item': item},
+            errback=self.media_failed, errbackArgs=(request, info))
         return dfd
 
     def _cache_result_and_execute_waiters(self, result, fp, info):

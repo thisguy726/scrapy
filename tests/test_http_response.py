@@ -227,17 +227,13 @@ class BaseResponseTest(unittest.TestCase):
         if self.response_class == Response:
             with self.assertRaises(TypeError):
                 list(r.follow_all(urls=None))
-            with self.assertRaises(TypeError):
-                list(r.follow_all(urls=12345))
-            with self.assertRaises(ValueError):
-                list(r.follow_all(urls=[None]))
         else:
             with self.assertRaises(ValueError):
                 list(r.follow_all(urls=None))
-            with self.assertRaises(TypeError):
-                list(r.follow_all(urls=12345))
-            with self.assertRaises(ValueError):
-                list(r.follow_all(urls=[None]))
+        with self.assertRaises(TypeError):
+            list(r.follow_all(urls=12345))
+        with self.assertRaises(ValueError):
+            list(r.follow_all(urls=[None]))
 
     def test_follow_all_whitespace(self):
         relative = ['foo ', 'bar ', 'foo/bar ', 'bar/foo ']
@@ -288,13 +284,11 @@ class BaseResponseTest(unittest.TestCase):
 
     def _links_response(self):
         body = get_testdata('link_extractor', 'linkextractor.html')
-        resp = self.response_class('http://example.com/index', body=body)
-        return resp
+        return self.response_class('http://example.com/index', body=body)
 
     def _links_response_no_href(self):
         body = get_testdata('link_extractor', 'linkextractor_no_href.html')
-        resp = self.response_class('http://example.com/index', body=body)
-        return resp
+        return self.response_class('http://example.com/index', body=body)
 
 
 class TextResponseTest(BaseResponseTest):

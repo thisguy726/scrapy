@@ -43,7 +43,7 @@ class StackTraceDump:
                     log_args, extra={'crawler': self.crawler})
 
     def _thread_stacks(self):
-        id2name = dict((th.ident, th.name) for th in threading.enumerate())
+        id2name = {th.ident: th.name for th in threading.enumerate()}
         dumps = ''
         for id_, frame in sys._current_frames().items():
             name = id2name.get(id_, '')
